@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CalloutCard,
+  DataTable,
   Layout,
   Link,
   ResourceList,
@@ -46,6 +47,7 @@ const getAppSettings = () => {
 
   const [merchantDetails, setMerchantDetails] = useState("");
   const [currentUser, setCurrentUser] = useState("");
+  const [shopInventory, setShopInventory] = useState("");
 
 
   useEffect(() => {
@@ -94,6 +96,13 @@ const getAppSettings = () => {
           setCurrentUser(responseData.data.currentUser);
         }
 
+        if(responseData.data.products && responseData.data.customers){
+          setShopInventory({
+            products: responseData.data.products.products,
+            customers: responseData.data.customers.customers
+          });
+        }
+
         setAppState(DEFAULT_APP_STATES.SUCCESS);
 
       };
@@ -110,6 +119,7 @@ const getAppSettings = () => {
     appState,
     currentUser,
     merchantDetails,
+    shopInventory,
     setAppState,
     setMerchantDetails,
     getTestEndpoint
@@ -291,6 +301,32 @@ const RegisteredMerchant = (props) => {
   // const shopName = props && props.merchantDetails && props.merchantDetails.shop
 
   console.log("Registered merchant: Shop Details: ", props.merchantDetails)
+  console.log("Registered merchant: Shop Inventory: ", props.shopInventory)
+
+
+  const rows = props.shopInventory.products.map((product, index) => {
+      // return [product.id, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
+      return [index+1, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
+      // return [product.id, product.title, product.status, 0, 0]
+    });
+  
+
+  console.log("rows: ", rows)
+
+
+
+  // const rows = [
+  //   // ...props.shopInvetory.products.pro,
+  //   ['Emerald Silk Gown', '$875.00', 124689, 140, '$122,500.00'],
+  //   ['Mauve Cashmere Scarf', '$230.00', 124533, 83, '$19,090.00'],
+  //   [
+  //     'Navy Merino Wool Blazer with khaki chinos and yellow belt',
+  //     '$445.00',
+  //     124518,
+  //     32,
+  //     '$14,240.00',
+  //   ],
+  // ];
 
   return(
     <Page 
@@ -300,18 +336,31 @@ const RegisteredMerchant = (props) => {
       //   onAction: indexPagePrimaryAction
       // }}
     >
-      <TextField
-        label="Store name"
-        // value={value}
-        // onChange={handleChange}
-        autoComplete="off"
-      />
-      
-      <small >Add some logo layout here</small>
+      <Heading>
+        ALL PRODUCTS
+      </Heading>
 
-      {/* <div onClick={indexPagePrimaryAction}>
-        Hello
-      </div> */}
+      <hr/>
+      <Card>
+        <DataTable
+          columnContentTypes={[
+            'numeric',
+            'text',
+            'text',
+            'numeric',
+            'numeric',
+          ]}
+          headings={[
+            'ID',
+            'Product',
+            'Status',
+            'Created At',
+            'Updated At',
+          ]}
+          rows={rows}
+          totals={['', '', '', 255, '$155,830.00']}
+        />
+      </Card>
       
     </Page>
   )
@@ -335,7 +384,11 @@ const AppJourney = (props) => {
 
   if(props && props.merchantDetails && props.merchantDetails.isRegistered === true){
     return (
-      <RegisteredMerchant merchantDetails={props.merchantDetails} currentUser={props.currentUser}/>
+      <RegisteredMerchant 
+        merchantDetails={props.merchantDetails} 
+        currentUser={props.currentUser}
+        shopInventory={props.shopInventory}
+      />
     );
   } else {
     return (
@@ -350,7 +403,8 @@ const Index = () => {
   const {
     appState,
     currentUser,
-    merchantDetails, 
+    merchantDetails,
+    shopInventory, 
     setAppState,
     setMerchantDetails,
     getTestEndpoint
@@ -377,6 +431,7 @@ const Index = () => {
             merchantDetails={merchantDetails} 
             setMerchantDetails={setMerchantDetails}
             currentUser={currentUser}
+            shopInventory={shopInventory}
           />
         )
       
