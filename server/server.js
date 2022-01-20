@@ -78,6 +78,15 @@ app.prepare().then(async () => {
   };
 
 
+  // router.get("/register-shop", async (ctx) => {
+  //   const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res);
+  //   // const shop = session;
+
+  //   axios.get("https://60-seconds-server.com/register-newshop",{...formdata}).then({
+
+  //   });
+  // })
+
   router.get("/test-endpoint", async (ctx) => {
     console.log("session: Attempting....: ")
     const session = await Shopify.Utils.loadCurrentSession(ctx.req, ctx.res);
@@ -100,6 +109,14 @@ app.prepare().then(async () => {
     //   return;
     // }
     console.log("session:GET: ", session);
+
+
+    const sessionToReturn = {
+      shopId: session.id,
+      shop: session.shop,
+      scope: session.scope
+    }
+    console.log("session:GET: to rerun: ", sessionToReturn);
     // console.log("session:GET: ", ctx);
     const client = new Shopify.Clients.Rest(session.shop, session.accessToken);
 
@@ -108,14 +125,30 @@ app.prepare().then(async () => {
     //   type: DataType.JSON,
     // });
 
-    const productDetails = await client.get({
+    const shopProducts = await client.get({
       path: 'products',
       type: DataType.JSON,
     });
 
+    const shopCustomers = await client.get({
+      path: 'customers',
+      type: DataType.JSON,
+    });
+
+    // const shopOrders = await client.get({
+    //   path: 'orders',
+    //   type: DataType.JSON,
+    // });
+
     ctx.body = {
       status: "OK_REQUEST",
-      data: productDetails.body,
+      data: {
+        session: sessionToReturn,
+        products: shopProducts.body,
+        customers: shopCustomers.body,
+        currentUser: session.onlineAccessInfo.associated_user
+        // orders: shopOrders.body,
+      },
     };
     ctx.status = 200;
   });
