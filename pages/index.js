@@ -37,19 +37,36 @@ const DEFAULT_APP_STATES =  {
 
 
 
-
+/**
+ * getAppSettings Method/Function
+ *  - Initialises Application Settings
+ *  
+ * @returns Applications Settings Object
+ */
 const getAppSettings = () => {
+  /**
+   * - Initialise Application Context
+   */
   const app = useAppBridge();
+  
+
+  /**
+   * - Set Application States
+   */
   const [appState, setAppState] = useState({
     status: DEFAULT_APP_STATES.PENDING,
     message: DEFAULT_APP_STATES.PENDING
   });
-
   const [merchantDetails, setMerchantDetails] = useState("");
   const [currentUser, setCurrentUser] = useState("");
   const [shopInventory, setShopInventory] = useState("");
 
 
+  /**
+   * - Component Will Mount Hook
+   * - Get App/Session and User Auth tokens
+   * - Get/Fetch Current Shop's Inventory/Customers [Boiler Plate] 
+   */
   useEffect(() => {
     getTestEndpoint();
   }, [])
@@ -59,11 +76,10 @@ const getAppSettings = () => {
     setAppState(DEFAULT_APP_STATES.PENDING);
     
     try {
-      // console.log("RESPONSE DATA : TEST END-POINT: GET :: ", this.context);
-      // const app = await useAppBridge();
       const token = await getSessionToken(app);
 
       console.log("RESPONSE DATA : TEST TOKEN: GET :: ", token);
+
       const res = await fetch("/test-endpoint", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -72,19 +88,12 @@ const getAppSettings = () => {
 
       console.log("RESPONSE DATA : TEST END-POINT: GET :: ", responseData);
 
-      // if (responseData.status === "EMPTY_SETTINGS") {
-      //   return;
-      // }
-
-      // if (responseData.status === "OK_SETTINGS") {
-      //   setSettingsObj(responseData.data);
-      //   return;
-      // }
-
-      // throw Error("Unknown settings status");
-      
+      /**
+       * - Set State With Results
+       * - Set Application State based on Results
+       */ 
       if(responseData && responseData.data){
-        //Set mechant Details
+        // Set mechant Details
         if(responseData.data.session){
           setMerchantDetails({
             shopDetails: responseData.data.session,
@@ -127,40 +136,12 @@ const getAppSettings = () => {
 
 }
 
-
-
-// class Index extends React.Component {
-
-//   indexPagePrimaryAction = async () => {
-//     console.log("ORDERS: ");
-
-//     getTestHook();
-
-//   }
-
-  
-
-//   // componentDidMount = () => {
-    
-//   // }
-
-//   render() {
-//     return (
-//       <Page 
-//         singleColumn title="60 Seconds | Welcome"
-//         primaryAction={{
-//           content: "Synchronise with 60",
-//           onAction: this.indexPagePrimaryAction
-//         }}
-//       >
-//         <small> Add some logo layout here</small>
-        
-//       </Page>
-//     );
-//   }
-// };
-
-
+/**
+ * AppLoading Component
+ *  - Shows a loading bar while app state is "PENDING"
+ * @param {*} props 
+ * @returns 
+ */
 const AppLoading = (props) => {
   return(
     <Page>
@@ -174,6 +155,12 @@ const AppLoading = (props) => {
 };
 
 
+/**
+ * AppError Component
+ *  - Shows a error page if app state is "ERROR"
+ * @param {*} props 
+ * @returns 
+ */
 const AppError = (props) => {
   return(
     <Page
@@ -190,13 +177,61 @@ const AppError = (props) => {
 };
 
 
+/**
+ * AppJourney Component
+ *  - Shows a healthy application journey if app state is "SUCCESS"
+ *  - Checks and authenticates current session
+ *  - Shows appropriate journey
+ * @param {*} props 
+ * @returns 
+ */
+const AppJourney = (props) => {
+  
+  const handleSubmitRegistration = () => {
+    console.log("Submitting Registration Details...");
+
+    props.setMerchantDetails({
+      shopDetails: props.merchantDetails.shopDetails,
+      isRegistered: true
+    });
+
+    console.log("Updating Registration Details...");
+  };
+
+  if(props && props.merchantDetails && props.merchantDetails.isRegistered === true){
+    return (
+      <RegisteredMerchant 
+        merchantDetails={props.merchantDetails} 
+        currentUser={props.currentUser}
+        shopInventory={props.shopInventory}
+      />
+    );
+  } else {
+    return (
+      <UnregisteredMerchant handleSubmitRegistration={handleSubmitRegistration}/>
+    )
+  }
+}
+
+
+/**
+ * UnregisteredMerchant Component
+ *  - Shows Unregistered merchant journey if shop is authenticated, 
+ *    but Not registered on 60 Seconds.
+ *  - Currently displays a 60 Seconds Registration Form. [Boiler Plate]
+ * 
+ * @param {*} props 
+ * @returns 
+ */
 const UnregisteredMerchant = (props) => {
   const [newsletter, setNewsletter] = useState(false);
   const [email, setEmail] = useState('');
 
   const handleSubmit = useCallback((_event) => {
-    // setEmail('');
-    // setNewsletter(false);
+    /**
+     * - Handle Registration Form Validation.
+     * - Send Form to appropriate endpoint for server.
+     */
     console.log("Attempting to Submit Registration....");
     props.handleSubmitRegistration();
   }, []);
@@ -296,7 +331,15 @@ const UnregisteredMerchant = (props) => {
 
 
 
-
+/**
+ * RegisteredMerchant Component
+ *  - Shows Registered merchant journey if shop is authenticated, 
+ *    AND registered on 60 Seconds.
+ *  - Currently displays authenticated shop's inventory in a table. [Boiler Plate]
+ * 
+ * @param {*} props 
+ * @returns 
+ */
 const RegisteredMerchant = (props) => {
   // const shopName = props && props.merchantDetails && props.merchantDetails.shop
 
@@ -305,28 +348,13 @@ const RegisteredMerchant = (props) => {
 
 
   const rows = props.shopInventory.products.map((product, index) => {
-      // return [product.id, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
-      return [index+1, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
-      // return [product.id, product.title, product.status, 0, 0]
-    });
+    // return [product.id, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
+    return [index+1, product.title, product.status, new Date(product.created_at).toUTCString(), new Date(product.updated_at).toUTCString()]
+    // return [product.id, product.title, product.status, 0, 0]
+  });
   
+  console.log("rows: ", rows);
 
-  console.log("rows: ", rows)
-
-
-
-  // const rows = [
-  //   // ...props.shopInvetory.products.pro,
-  //   ['Emerald Silk Gown', '$875.00', 124689, 140, '$122,500.00'],
-  //   ['Mauve Cashmere Scarf', '$230.00', 124533, 83, '$19,090.00'],
-  //   [
-  //     'Navy Merino Wool Blazer with khaki chinos and yellow belt',
-  //     '$445.00',
-  //     124518,
-  //     32,
-  //     '$14,240.00',
-  //   ],
-  // ];
 
   return(
     <Page 
@@ -369,36 +397,16 @@ const RegisteredMerchant = (props) => {
 
 
 
-const AppJourney = (props) => {
-  
-  const handleSubmitRegistration = () => {
-    console.log("Submitting Registration Details...");
 
-    props.setMerchantDetails({
-      shopDetails: props.merchantDetails.shopDetails,
-      isRegistered: true
-    });
-
-    console.log("Updating Registration Details...");
-  };
-
-  if(props && props.merchantDetails && props.merchantDetails.isRegistered === true){
-    return (
-      <RegisteredMerchant 
-        merchantDetails={props.merchantDetails} 
-        currentUser={props.currentUser}
-        shopInventory={props.shopInventory}
-      />
-    );
-  } else {
-    return (
-      <UnregisteredMerchant handleSubmitRegistration={handleSubmitRegistration}/>
-    )
-  }
-}
-
-
-
+/**
+ * Index Component
+ *  - Front End Application Root 
+ *  - Initialises Application states
+ *  - Initialises Application health
+ * 
+ * @param {*} props 
+ * @returns 
+ */
 const Index = () => {
   const {
     appState,
@@ -440,17 +448,13 @@ const Index = () => {
     }
   }
 
-  // if(appState === DEFAULT_APP_STATES.PENDING){
-  //   return
-  // }
   return (
     <div>
       {renderAppJourney()}
-
     </div>
-    
-    
   );
 };
+
+
 
 export default Index;
